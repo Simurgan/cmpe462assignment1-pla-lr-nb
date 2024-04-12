@@ -1,13 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import random
 
 class LogisticRegression:
-    def __init__(self, data_frame, label_frame):
+    def __init__(self, data_frame):
         self.data = data_frame.to_numpy()
-        self.labels = label_frame.to_numpy()
-        self.weights = np.zeros(self.data.shape[1])
-        self.num_iterations = 0
+        np.random.shuffle(self.data)
+        
+        self.N = self.data.shape[0]
+        self.num_features = self.data.shape[1] - 1
+        self.lambda_ = 0
+        self.weights = np.random.rand(self.num_features, 1)
+        self.mins = [None] * self.num_features
+        self.maxes = [None] * self.num_features
 
     def plot_feature(self, feature_index):
         data = self.data.T[feature_index]
@@ -34,11 +38,48 @@ class LogisticRegression:
                 self.data[i][feature_index] = max_val
 
     def scale_features(self):
-        for i in range(self.data.shape[1]):
+        for i in range(self.num_features):
             min_val = self.data.T[i].min()
             max_val = self.data.T[i].max()
-            for d in range(self.data.shape[0]):
+            for d in range(self.N):
                 self.data[d][i] = (self.data[d][i] - min_val) / (max_val - min_val)
+
+            self.mins[i] = min_val
+            self.maxes[i] = max_val
+
+    def split_data(self, training_ratio):
+        training_split = self.data[:int(training_ratio * self.data.shape[0])]
+        test_split = self.data[int(training_ratio * self.data.shape[0]):]
+
+        self.N_training = training_split.shape[0]
+        self.N_test = test_split.shape[0]
+
+        self.training_data = training_split.T[0:-1].T
+        self.test_data = test_split.T[0:-1].T
+
+        self.training_labels = self.training_data.T[-1]
+        self.training_labels[self.training_labels == "Cammeo"] = -1.0
+        self.training_labels[self.training_labels == "Osmancik"] = 1.0
+
+        self.test_labels = self.test_data.T[-1]
+        self.test_labels[self.test_labels == "Cammeo"] = -1.0
+        self.test_labels[self.test_labels == "Osmancik"] = 1.0
+
+    def gradient(self, idx=None):
+        if idx is None:
+            exponentials = np.exp(-1 * self.training_labels * (self.data @ self.weights))
+            factors = -1 * self.training_labels * exponentials / (1 + exponentials)
+            gradient = (factors * self.data).sum(axis=0) / self.N
+        else:
+            exponentials = np.exp(-1 * self.training_labels[idx] * (self.data[idx] @ self.weights))
+            factors = -1 * self.training_labels[idx] * exponentials / (1 + exponentials)
+            gradient = factors * self.data[idx]
+
+        if self.lambda_ != 0:
+            gradient += self.lambda_ * self.weights
+        
+        return gradient
+
             
     # Non-regularized
     # E(w) = 1/N * sum(log(1 + exp(-y_n * w^T * x_n)))

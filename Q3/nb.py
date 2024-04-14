@@ -84,4 +84,4 @@ class NaiveBayes(nn.Module):
 #     predicted = model.predict(X_test)
 #     accuracy = (predicted.numpy() == y_test).mean()
 #     print(f'Test Accuracy: {accuracy:.4f}')
-# 
+#    

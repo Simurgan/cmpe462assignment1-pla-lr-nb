@@ -8,7 +8,8 @@ class LogisticRegression:
         
         self.N = self.data.shape[0]
         self.num_features = self.data.shape[1] - 1
-        self.weights = np.random.rand(self.num_features, 1)
+        self.reset_weights()
+
         self.mins = [None] * self.num_features
         self.maxes = [None] * self.num_features
 
@@ -53,18 +54,18 @@ class LogisticRegression:
         self.N_training = training_split.shape[0]
         self.N_test = test_split.shape[0]
 
-        self.training_data = training_split.T[0:-1].T
-        self.test_data = test_split.T[0:-1].T
+        self.training_data = training_split.T[0:-1].T.astype(np.float64)
+        self.test_data = test_split.T[0:-1].T.astype(np.float64)
 
         self.training_labels = training_split.T[-1]
         self.training_labels[self.training_labels == "Cammeo"] = -1.0
         self.training_labels[self.training_labels == "Osmancik"] = 1.0
-        self.training_labels = self.training_labels.reshape((self.N_training, 1))
+        self.training_labels = self.training_labels.reshape((self.N_training, 1)).astype(np.float64)
 
         self.test_labels = test_split.T[-1]
         self.test_labels[self.test_labels == "Cammeo"] = -1.0
         self.test_labels[self.test_labels == "Osmancik"] = 1.0
-        self.test_labels = self.test_labels.reshape((self.N_test, 1))
+        self.test_labels = self.test_labels.reshape((self.N_test, 1)).astype(np.float64)
 
     def gradient(self, lambda_, idx=None):
         if idx is None:
@@ -76,13 +77,24 @@ class LogisticRegression:
             factors = -1 * self.training_labels[idx] * exponentials / (1 + exponentials)
             gradient = factors * self.data[idx]
 
+        gradient = gradient.reshape((self.num_features, 1)).astype(np.float64)
+
         if lambda_ != 0:
-            gradient += lambda_ * self.weights
+            gradient += lambda_ * np.abs(self.weights)
         
-        return gradient
+        return gradient.reshape((self.num_features, 1)).astype(np.float64)
     
     def reset_weights(self):
-        self.weights = np.random.rand(self.num_features, 1)
+        self.weights = np.random.rand(self.num_features, 1).astype(np.float64)
+
+    def evaluate(self):
+        training_predictions = np.sign(self.training_data @ self.weights)
+        training_accuracy = (training_predictions == self.training_labels).sum() / self.N_training
+        
+        test_predictions = np.sign(self.test_data @ self.weights)
+        test_accuracy = (test_predictions == self.test_labels).sum() / self.N_test
+
+        return training_accuracy, test_accuracy
 
     def GD(self, step_size, num_iterations, lambda_=0, reset_weights=True):
         if reset_weights:
@@ -90,6 +102,11 @@ class LogisticRegression:
 
         for epoch in range(num_iterations):
             self.weights -= step_size * self.gradient(lambda_)
+            training_accuracy, test_accuracy = self.evaluate()
+
+            print("Epoch: ", epoch)
+            print("\tTraining accuracy: ", training_accuracy)
+            print("\tTest accuracy: ", test_accuracy)
 
     def SGD(self, step_size, num_epochs, lambda_=0, reset_weights=True):
         if reset_weights:

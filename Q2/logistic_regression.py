@@ -73,9 +73,9 @@ class LogisticRegression:
             factors = -1 * self.training_labels * exponentials / (1 + exponentials)
             gradient = (factors * self.training_data).sum(axis=0) / self.N
         else:
-            exponentials = np.exp(-1 * self.training_labels[idx] * (self.data[idx] @ self.weights))
+            exponentials = np.exp(-1 * self.training_labels[idx] * (self.training_data[idx] @ self.weights))
             factors = -1 * self.training_labels[idx] * exponentials / (1 + exponentials)
-            gradient = factors * self.data[idx]
+            gradient = factors * self.training_data[idx]
 
         gradient = gradient.reshape((self.num_features, 1)).astype(np.float64)
 
@@ -100,11 +100,11 @@ class LogisticRegression:
         if reset_weights:
             self.reset_weights()
 
-        for epoch in range(num_iterations):
+        for iteration in range(num_iterations):
             self.weights -= step_size * self.gradient(lambda_)
             training_accuracy, test_accuracy = self.evaluate()
 
-            print("Epoch: ", epoch)
+            print("Iteration: ", iteration)
             print("\tTraining accuracy: ", training_accuracy)
             print("\tTest accuracy: ", test_accuracy)
 
@@ -115,6 +115,12 @@ class LogisticRegression:
         for epoch in range(num_epochs):
             for idx in range(self.N_training):
                 self.weights -= step_size * self.gradient(lambda_, idx)
+            
+            training_accuracy, test_accuracy = self.evaluate()
+
+            print("Epoch: ", epoch)
+            print("\tTraining accuracy: ", training_accuracy)
+            print("\tTest accuracy: ", test_accuracy)
 
             
     # Non-regularized

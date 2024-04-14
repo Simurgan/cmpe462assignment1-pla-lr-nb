@@ -1,0 +1,12 @@
+(569, 30)
+(569, 1)
+     radius1  texture1  ...  symmetry3  fractal_dimension3
+255    13.96     17.05  ...     0.3068             0.07957
+
+[1 rows x 30 columns]
+    Diagnosis
+165         B
+250         M
+160         B
+461         M
+18          M

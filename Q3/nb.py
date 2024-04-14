@@ -7,9 +7,7 @@ class NaiveBayes(nn.Module):
     def __init__(self, input_dim, num_classes):
         super(NaiveBayes, self).__init__()
         self.input_dim = input_dim
-        print("input_dim", input_dim)
         self.num_classes = num_classes
-        print("num_classes", num_classes)
         
         # Parameters for the class priors
         self.class_priors = nn.Parameter(torch.ones(num_classes) / num_classes, requires_grad=True)

@@ -111,22 +111,37 @@ class LogisticRegression:
         test_accuracy = (test_predictions == test_labels).sum() / len(test_labels)
 
         return training_accuracy, test_accuracy
+    
+    def calculate_loss(self, lambda_power=None):
+        exponentials = np.exp(-1 * self.training_labels * (self.training_data @ self.weights))
+        loss = np.log(1 + exponentials).sum(axis=0) / self.N_training
+        loss = loss.reshape((1, 1)).astype(np.float64)
+        if lambda_power is not None:
+            loss += ((10**lambda_power) / 2) * (self.weights.T @ self.weights)
+
+        return loss[0][0]
 
     def GD(self, step_size, num_iterations, lambda_power=None, reset_weights=True):
         if reset_weights:
             self.reset_weights()
+            self.losses = []
 
         for iteration in range(num_iterations):
             self.weights -= step_size * self.gradient(lambda_power)
             training_accuracy, test_accuracy = self.evaluate()
 
+            loss = self.calculate_loss(lambda_power=lambda_power)
+            self.losses.append(loss)
+
             print("Iteration: ", iteration)
+            print("\tLoss: ", loss)
             print("\tTraining accuracy: ", training_accuracy)
             print("\tTest accuracy: ", test_accuracy)
 
     def SGD(self, step_size, num_epochs, lambda_power=None, reset_weights=True):
         if reset_weights:
             self.reset_weights()
+            self.losses = []
 
         for epoch in range(num_epochs):
             for idx in range(self.N_training):
@@ -134,7 +149,11 @@ class LogisticRegression:
             
             training_accuracy, test_accuracy = self.evaluate()
 
+            loss = self.calculate_loss(lambda_power=lambda_power)
+            self.losses.append(loss)
+
             print("Epoch: ", epoch)
+            print("\tLoss: ", loss)
             print("\tTraining accuracy: ", training_accuracy)
             print("\tTest accuracy: ", test_accuracy)
 
@@ -178,7 +197,6 @@ class LogisticRegression:
                 best_lambda = lambda_power
         
         return best_lambda, mean_accuracies
-
             
     # Non-regularized
     # E(w) = 1/N * sum(log(1 + exp(-y_n * w^T * x_n)))
